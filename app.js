@@ -4,6 +4,8 @@ const cors = require('cors');
 const app = express();
 const mysql = require('mysql2');
 
+const userRoutes = require('./user');
+
 const port = process.env.PORT; // 백엔드 포트는 4001로 설정
 
 const connection = mysql.createConnection({
@@ -24,13 +26,14 @@ connection.connect((err) => {
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/user', userRoutes);
 
 app.listen(port, () => {
     console.log(`Backend server is running on http://localhost:${port}`);
 });
 
 app.get('/api/data', (req, res) => {
-    connection.query('SELECT * FROM oneline_list', (err, result, fields) => {
+    connection.query('SELECT id, text, writer FROM oneline_list', (err, result) => {
         if (err) {
             res.status(500).json({ error: '쿼리 실행 실패' });
             return;
@@ -40,12 +43,12 @@ app.get('/api/data', (req, res) => {
 });
 
 app.post('/api/list', (req, res) => {
-    const { text } = req.body;
+    const { text, writer } = req.body;
     if (!text) {
-        return res.status(400).json({ error: '명언을 입력하세요.' });
+        return res.status(400).json({ error: '문장을 입력하세요.' });
     }
-    const query = 'INSERT INTO oneline_list (text, reg_Id) VALUES (?,?)';
-    connection.query(query, [text, 1], (err, result) => {
+    const query = 'INSERT INTO oneline_list (text, writer, reg_Id) VALUES (?,?)';
+    connection.query(query, [text, writer, 1], (err, result) => {
         if (err) {
             return res.status(500).json({ error: '쿼리 실행 실패' });
         }
